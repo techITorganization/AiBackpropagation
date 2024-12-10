@@ -7,51 +7,80 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense
 from tensorflow.keras.optimizers import Adam
 
-# Data pelatihan (masukkan data dari tabel)
-data_train = [
-    [57.4, 60.2, 34.1, 2.8, 13.4, 110.4, 56.6, 110.3, 0.00, 17.5, 22.8, 0.4, 66.0, 2.6, 17.3, 4.6, 21.3, 3.8, 0.4, 0.5, 3.0, 3.2, 30.5, 3.10, 0.2, 1.9, 0.4, 0.1, 0.0, 2.0],
-    [65.2, 65.9, 22.8, 2.8, 13.4, 120.8, 57.0, 115.5, 0.0, 17.7, 18.9, 0.5, 1.9, 0.4, 0.3, 3.30, 2.9, 31.9, 2.7, 0.2, 3.2, 0.4, 0.1, 0.1, 2.3 ],
-    [],
-    [0.3927, 0.3953, 0.1765, 0.1641, 0.1000, 0.5573, 0.1872, 0.3667, 0.3112, 0.2078, 0.1111, 0.1121, 0.1211],
-    [0.3906, 0.3952, 0.1727, 0.1663, 0.1123, 0.1000, 0.1820, 0.3722, 0.2781, 0.2113, 0.1112, 0.1123, 0.1269],
-    [0.4212, 0.3942, 0.4105, 0.1727, 0.1995, 0.2099, 0.1800, 0.4236, 0.3956, 0.2272, 0.1693, 0.2125, 0.1256]]
-     
-df_train = {
-    "X1": data_train[0],
-    "X2": data_train[1],
-    "X3": data_train[2],
-    "X4": data_train[3],
-    "X5": data_train[4],
-    "target": data_train[5]
-}
-pd.DataFrame(data_train)
-
-# Normalisasi data
-scaler = MinMaxScaler()
-X_train = scaler.fit_transform(df_train.drop("target", axis=1))
-y_train = df_train["target"].values
-
-# Membuat model neural network
-model = Sequential([
-    Dense(5, activation='sigmoid', input_dim=X_train.shape[1]),
-    Dense(2, activation='sigmoid'),
-    Dense(1, activation='sigmoid')
+# Data training
+data_train = np.array([
+    [32134,290475,48776,14861,2777,32393,72980,22226,307602,242706,4135592,20103,31434,17598,81127,3703,1117565,1684351],
+    [29888,213291,64733,8029,3543,0,57799,1201,323635,372573,5049694,14957,26345,15176,65393,6045,945863,1571497],
+    [1612,155582,66136,6655,1625,0,45209,18580,390958,308901,4377991,12675,23587,20522,81587,4548,909309,1475917],
+    [26132,52913,73207,9549,3830,0,108083,24539,261523,375459,4460637,22761,53551,54185,92965,8411,1061444,1813744],
+    [18121,55558,77127,39945,2409,0,85434,24813,281591,372044,4231197,106304,41595,35767,92425,7458,1040050,1546896],
+    [6034,110205,77818,36450,1491,0,59699,17431,268681,369933,4062671,105334,39141,15756,67707,6756,1237864,1249338]
 ])
-model.compile(optimizer=Adam(learning_rate=0.01), loss='mse')
 
-# Latih model
-history = model.fit(X_train, y_train, epochs=489, verbose=0)
+data_train = data_train.transpose()
 
-# Visualisasikan Mean Squared Error
-plt.plot(history.history['loss'], label='Train Loss', color='blue')
-plt.title("Best Training Performance")
-plt.xlabel("Epochs")
-plt.ylabel("Mean Squared Error (mse)")
+df_train = pd.DataFrame(
+    data_train,
+    columns=["2004", "2005", "2006", "2007", "2008", "2009"]
+)
 
-# Set nilai pada sumbu Y
-plt.yscale('log')  # Mengatur skala logaritmik pada sumbu Y
-plt.yticks([1, 0.1, 0.01, 0.001, 0.0001], labels=["1", "0.1", "0.01", "0.001", "0.0001"])
+# Normalisasi Min-Max Scaling untuk data training
+df_train_min_max_scaled = df_train.copy()
 
-# Menampilkan legenda dan plot
+for column in df_train_min_max_scaled.columns:
+    df_train_min_max_scaled[column] = (((df_train_min_max_scaled[column] - df_train_min_max_scaled[column].min()) * 0.8) / 
+                                       (df_train_min_max_scaled[column].max() - df_train_min_max_scaled[column].min())) + 0.1
+
+# Data testing
+data_testing = np.array([
+    [5853, 160989, 82063, 36109, 525, 0, 45307, 21340, 250500, 342897, 4385510, 100886, 35449, 7222, 31583, 4822, 960548, 869666],
+    [6380, 0, 99244, 0, 0, 0, 48094, 0, 209827, 168467, 4091990, 3657, 22337, 0, 35256, 246, 948357, 739554],
+    [4707, 0, 112141, 5122, 0, 30, 41466, 16, 233432, 255099, 3160592, 6675, 18460, 802, 28400, 2197, 849772, 623201],
+    [453, 139521, 44244, 6098, 0, 14, 17959, 70, 31878, 272201, 3082766, 5659, 8904, 292, 0, 2019, 753926, 486877],
+    [453, 110144, 71864, 18223, 0, 14, 23307, 471, 22486, 262685, 3742865, 9775, 10566, 2585, 0, 1317, 651929, 518357],
+    [2173, 14165, 112541, 15145, 0, 35, 34300, 777, 78972, 327803, 4169157, 11238, 16272, 5159, 0, 3324, 513774, 574545]
+])
+
+data_testing = data_testing.transpose()
+
+df_testing = pd.DataFrame(
+    data_testing,
+    columns=["2010", "2011", "2012", "2013", "2014", "2015"]
+)
+
+# Normalisasi Min-Max Scaling untuk data testing
+df_testing_min_max_scaled = df_testing.copy()
+
+for column in df_testing_min_max_scaled.columns:
+    df_testing_min_max_scaled[column] = (((df_testing_min_max_scaled[column] - df_testing_min_max_scaled[column].min()) * 0.8) / 
+                                         (df_testing_min_max_scaled[column].max() - df_testing_min_max_scaled[column].min())) + 0.1
+
+# Membangun model neural network
+model = Sequential()
+
+# Menambahkan layer input dengan ukuran input sesuai data 
+model.add(Dense(units=64, input_dim=df_train_min_max_scaled.shape[1], activation='relu'))  # Hidden Layer pertama
+
+# Menambahkan layer tersembunyi kedua
+model.add(Dense(units=32, activation='relu')) 
+
+# Output Layer dengan aktivasi tanh (untuk sigmoid bipolar)
+model.add(Dense(units=1, activation='tanh'))
+
+# Menyusun model dengan optimizer Adam dan loss function MSE
+model.compile(optimizer=Adam(learning_rate=0.001), loss='mean_squared_error')
+
+# Menampilkan ringkasan model
+model.summary()
+
+# Melatih model dengan data training dan data testing
+history = model.fit(df_train_min_max_scaled, df_train_min_max_scaled, epochs=100, batch_size=32, validation_data=(df_testing_min_max_scaled, df_testing_min_max_scaled))
+
+# Menampilkan grafik loss selama pelatihan
+plt.plot(history.history['loss'], label='Training Loss')
+plt.plot(history.history['val_loss'], label='Validation Loss')
+plt.xlabel('Epochs')
+plt.ylabel('Loss')
 plt.legend()
+plt.title('Training and Validation Loss')
 plt.show()
